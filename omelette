@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+# OMELETTE - A PHP fragmentation technique for bypassing WAF
+# Generate files / inject into logs
+# By Eldar "Wireghoul" Marcussen - justanotherhacker.com
+
+import sys
+import re
+
+banner="""
+         _            _   _         _            _             _          _          _            _      
+        /\ \         /\_\/\_\ _    /\ \         _\ \          /\ \       /\ \       /\ \         /\ \    
+       /  \ \       / / / / //\_\ /  \ \       /\__ \        /  \ \      \_\ \      \_\ \       /  \ \   
+      / /\ \ \     /\ \/ \ \/ / // /\ \ \     / /_ \_\      / /\ \ \     /\__ \     /\__ \     / /\ \ \  
+     / / /\ \ \   /  \____\__/ // / /\ \_\   / / /\/_/     / / /\ \_\   / /_ \ \   / /_ \ \   / / /\ \_\ 
+    / / /  \ \_\ / /\/________// /_/_ \/_/  / / /         / /_/_ \/_/  / / /\ \ \ / / /\ \ \ / /_/_ \/_/ 
+   / / /   / / // / /\/_// / // /____/\    / / /         / /____/\    / / /  \/_// / /  \/_// /____/\    
+  / / /   / / // / /    / / // /\____\/   / / / ____    / /\____\/   / / /      / / /      / /\____\/    
+ / / /___/ / // / /    / / // / /______  / /_/_/ ___/\ / / /______  / / /      / / /      / / /______    
+/ / /____\/ / \/_/    / / // / /_______\/_______/\__\// / /_______\/_/ /      /_/ /      / / /_______\   
+\/_________/          \/_/ \/__________/\_______\/    \/__________/\_\/       \_\/       \/__________/
+
+============================================================================[justanotherhacker.com]==="""
+print(banner, file=sys.stderr)
+
+if (len(sys.argv) != 2):
+    print("Usage:",sys.argv[0],"'php code'")
+    exit(2)
+
+code = sys.argv[1]
+
+# Strip comments, in case the code is a piped file
+nc = re.compile('(//.*$)', re.MULTILINE)
+code = nc.sub(r'', code)
+
+# Add comment after starting tags
+# <?php and <?= >>> <?php /**/ and <?=/**/
+ot = re.compile('(<\?php|<\?\=)')
+code = ot.sub(r'\1 /**/', code)
+
+# Add comment before ending tags
+# ?> >>> /**/?>
+et = re.compile('(\?>)')
+code = et.sub(r'/**/\1', code)
+
+# Add comment around semi colon
+# ; >>> /**/;/**/
+sc = re.compile('(\;)')
+code = sc.sub(r'/**/\1/**/', code)
+
+# Add comment after comma
+cm = re.compile('(\,)')
+code =  cm.sub(r'\1/**/', code)
+
+# Before and after ( )
+pt = re.compile('(\(|\))')
+code = pt.sub(r'/**/\1/**/', code)
+
+# Future additions? ( \"|\" |\[|\]) ?
+
+# Remove dupe comments
+dp = re.compile('(/\*\*/ */\*\*/)')
+code = dp.sub(r'/**/', code)
+
+# Insert newlines
+nl = re.compile('(\*/)')
+code = nl.sub(r'\n\1', code)
+
+# Strip empty lines
+bl = re.compile('(\n\s*\n)')
+code = bl.sub(r'\n', code)
+#code = re.sub(r'\n\s*\n', '\n', code, flags=re.MULTILINE)
+
+print(code)
