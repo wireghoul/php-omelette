@@ -1,6 +1,5 @@
 PHP OMELETTE
 ===============================================================================
-Written by 
 A code fragmentation technique for avoiding filtering or detection from things 
 like web application firewalls. Inspired by the concept of fragmented shellcode
 used in memory corruption [omelet][1] and can scatter fragmented PHP code
